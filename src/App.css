@@ -322,12 +322,17 @@
   opacity: 0.7;
 }
 
-/* Black Footer Container with Yellow Button */
+/* Black Footer Container with Yellow Button - MOBILE ONLY */
 .footer-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background-color: var(--snap-black);
-  padding: var(--spacing-md) var(--spacing-lg);
-  margin: 0 var(--spacing-sm) var(--spacing-sm);
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 0;
+  border-radius: 0;
+  z-index: 100;
 }
 
 /* Open In App Button - Yellow pill in black container */
@@ -335,12 +340,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   width: 100%;
-  max-width: 280px;
-  height: 44px;
+  max-width: 240px;
+  height: 36px;
   margin: 0 auto;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--snap-black);
   background-color: var(--snap-yellow);
@@ -357,7 +362,14 @@
 }
 
 .open-app-button .spinner {
+  width: 14px;
+  height: 14px;
   border-top-color: var(--snap-black);
+}
+
+/* Add padding to body to account for fixed footer on mobile */
+.app {
+  padding-bottom: 60px;
 }
 
 /* ======================================
@@ -368,12 +380,6 @@
 @media (min-width: 480px) {
   .login-container {
     margin: var(--spacing-lg) auto 0;
-    max-width: 420px;
-    width: calc(100% - var(--spacing-xl));
-  }
-
-  .footer-container {
-    margin: 0 auto var(--spacing-lg);
     max-width: 420px;
     width: calc(100% - var(--spacing-xl));
   }
@@ -393,11 +399,13 @@
   }
 }
 
-/* Desktop */
+/* Desktop - HIDE FOOTER COMPLETELY */
 @media (min-width: 768px) {
   .app {
     justify-content: center;
     padding: var(--spacing-xl);
+    padding-bottom: var(--spacing-xl);
+    /* Reset padding, no fixed footer */
   }
 
   .login-container {
@@ -406,8 +414,9 @@
     min-height: auto;
   }
 
+  /* HIDE footer on desktop/web */
   .footer-container {
-    margin: 0 auto;
+    display: none;
   }
 
   .signup-section {
@@ -423,7 +432,6 @@
 @media (min-width: 1024px) {
 
   .login-container,
-  .footer-container,
   .signup-section {
     max-width: 440px;
   }
