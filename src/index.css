@@ -181,18 +181,6 @@ a {
   }
 }
 
-@keyframes pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.02);
-  }
-}
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -200,27 +188,6 @@ a {
 
   to {
     transform: rotate(360deg);
-  }
-}
-
-/* Skeleton Loading Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-@keyframes dash {
-  0% {
-    stroke-dashoffset: 100;
-  }
-
-  100% {
-    stroke-dashoffset: 0;
   }
 }
 
