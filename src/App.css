@@ -36,14 +36,15 @@
 
 /* Snapchat Ghost Logo */
 .snap-logo {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   margin: 0 auto var(--spacing-lg);
 }
 
-.snap-logo svg {
+.snap-logo img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
 }
 
 /* Page Title */
@@ -52,8 +53,38 @@
   font-weight: 700;
   text-align: center;
   color: var(--snap-black);
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--spacing-xl);
   letter-spacing: -0.5px;
+}
+
+/* Username Display Pill (for password step) */
+.username-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--snap-gray-light);
+  border-radius: var(--radius-full);
+  width: fit-content;
+  margin: 0 auto var(--spacing-xl);
+}
+
+.username-text {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--snap-black);
+}
+
+.not-you-link {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--snap-blue);
+  transition: color var(--transition-fast);
+}
+
+.not-you-link:hover {
+  color: var(--snap-blue-dark);
 }
 
 /* Form Styles */
@@ -77,6 +108,10 @@
   padding-left: 2px;
 }
 
+.input-wrapper {
+  position: relative;
+}
+
 .input-field {
   width: 100%;
   height: 52px;
@@ -87,6 +122,10 @@
   border: 1.5px solid var(--snap-gray-border);
   border-radius: var(--radius-md);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input-field.has-toggle {
+  padding-right: 48px;
 }
 
 .input-field::placeholder {
@@ -100,19 +139,53 @@
 .input-field:focus {
   outline: none;
   border-color: var(--snap-blue);
-  box-shadow: 0 0 0 3px rgba(14, 173, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 195, 255, 0.15);
 }
 
 .input-field.error {
-  border-color: #FF3B30;
+  border-color: var(--snap-error);
   animation: shake 0.4s ease-in-out;
 }
 
-/* Password Input Container */
-.password-input-container {
+/* Skeleton Loading State for Input */
+.input-skeleton {
   position: relative;
+  overflow: hidden;
 }
 
+.input-skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.04) 50%,
+      transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  pointer-events: none;
+}
+
+.input-skeleton .input-field {
+  background: repeating-linear-gradient(90deg,
+      transparent 0px,
+      transparent 8px,
+      var(--snap-gray-border) 8px,
+      var(--snap-gray-border) 16px);
+  background-size: 24px 2px;
+  background-position: 16px center;
+  background-repeat: repeat-x;
+  color: transparent;
+}
+
+.input-skeleton .input-field::placeholder {
+  color: transparent;
+}
+
+/* Password Toggle Button */
 .password-toggle {
   position: absolute;
   right: var(--spacing-md);
@@ -121,6 +194,9 @@
   padding: var(--spacing-xs);
   color: var(--snap-gray-text);
   transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .password-toggle:hover {
@@ -128,24 +204,29 @@
 }
 
 .password-toggle svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
-/* Phone Number Link */
-.phone-link {
+/* Phone Number / Forgot Password Links */
+.action-link {
   text-align: center;
-  margin-top: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
 }
 
-.phone-link a {
+.action-link a,
+.action-link button {
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--snap-blue);
   transition: color var(--transition-fast);
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
-.phone-link a:hover {
+.action-link a:hover,
+.action-link button:hover {
   color: var(--snap-blue-dark);
 }
 
@@ -156,20 +237,20 @@
   justify-content: center;
   gap: var(--spacing-sm);
   width: fit-content;
-  min-width: 100px;
-  height: 44px;
-  margin: var(--spacing-md) auto 0;
+  min-width: 110px;
+  height: 46px;
+  margin: var(--spacing-lg) auto 0;
   padding: 0 var(--spacing-xl);
   font-size: var(--font-size-base);
   font-weight: 500;
   color: var(--snap-white);
-  background-color: #0095F6;
+  background-color: var(--snap-blue-button);
   border-radius: var(--radius-full);
   transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .next-button:hover:not(:disabled) {
-  background-color: #0084DD;
+  background-color: var(--snap-blue-button-hover);
 }
 
 .next-button:active:not(:disabled) {
@@ -177,7 +258,7 @@
 }
 
 .next-button:disabled {
-  background-color: #8ED0FA;
+  background-color: #A8DCF0;
   cursor: not-allowed;
 }
 
@@ -188,6 +269,18 @@
   border-top-color: var(--snap-white);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+/* Back Link */
+.back-link {
+  text-align: center;
+  margin-top: var(--spacing-md);
+}
+
+.back-link a {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--snap-blue);
 }
 
 /* Sign Up Section */
@@ -241,7 +334,7 @@
 /* Error Message */
 .error-message {
   font-size: var(--font-size-xs);
-  color: #FF3B30;
+  color: var(--snap-error);
   padding-left: 2px;
   margin-top: var(--spacing-xs);
 }
@@ -257,6 +350,11 @@
   height: 64px;
   margin: 0 auto var(--spacing-md);
   color: #34C759;
+}
+
+.success-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .success-title {
@@ -321,7 +419,7 @@
   }
 
   .snap-logo {
-    width: 72px;
-    height: 72px;
+    width: 80px;
+    height: 80px;
   }
 }
